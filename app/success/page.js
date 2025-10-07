@@ -1,9 +1,10 @@
 "use client";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-export const dynamic = "force-dynamic"; // ⬅️ ini bikin halaman tidak di-prerender
+export const dynamic = "force-dynamic";  // biar tidak di-prerender
 
-export default function SuccessPage() {
+function SuccessContent() {
   const sp = useSearchParams();
   const orderId = sp.get("orderId") || "—";
   const amount  = sp.get("amount")  || "—";
@@ -20,11 +21,21 @@ export default function SuccessPage() {
         <li><b>Jumlah:</b> {amount !== "—" ? `Rp ${Number(amount).toLocaleString("id-ID")}` : "—"}</li>
         <li><b>Status:</b> {status}</li>
       </ul>
-      <p className="muted">Halaman ini dituju oleh <code>RETURN_URL</code> setelah flow pembayaran selesai.</p>
+      <p className="muted">
+        Halaman ini dituju oleh <code>RETURN_URL</code> setelah flow pembayaran selesai.
+      </p>
       <p><a className="btn" href="/">Kembali ke Beranda</a></p>
       <div className="warn">
         Catatan: Pada sandbox, status akhir yang valid tetap mengacu pada data callback di <code>/callback</code>.
       </div>
     </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={<div className="container"><p>Memuat...</p></div>}>
+      <SuccessContent />
+    </Suspense>
   );
 }
