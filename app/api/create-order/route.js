@@ -43,7 +43,7 @@ export async function POST(req) {
     console.log("Signature:", signature);
 
     const res = await fetch(
-      "https://sandbox.duitku.com/api/merchant/createinvoice",
+      "https://sandbox.duitku.com/api/merchant/createInvoice",
       {
         method: "POST",
         headers: {
