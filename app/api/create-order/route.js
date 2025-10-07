@@ -29,7 +29,7 @@ export async function POST(req) {
     // Payload sesuai API browser docs
     const payload = {
       merchantCode,
-      paymentAmount: String(amount), // harus string angka
+      paymentAmount: String(amount),   // contoh "25000"
       merchantOrderId: orderId,
       productDetails: productName,
       email: "buyer@example.com",
@@ -37,9 +37,9 @@ export async function POST(req) {
       callbackUrl,
       returnUrl,
       signature,
-      paymentMethod: "QRIS" // fokus QRIS
+      paymentMethod: "QRIS"   // huruf besar semua
     };
-
+    
     console.log("Payload dikirim ke Duitku:", payload);
 
     const res = await fetch(
