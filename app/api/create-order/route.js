@@ -1,5 +1,5 @@
-import crypto from 'crypto';
-import { NextResponse } from 'next/server';
+import crypto from "crypto";
+import { NextResponse } from "next/server";
 
 export async function POST(req) {
   try {
@@ -12,54 +12,58 @@ export async function POST(req) {
 
     if (!merchantCode || !merchantKey) {
       return NextResponse.json(
-        { error: 'Missing MERCHANT_CODE or MERCHANT_KEY env' },
+        { error: "Missing MERCHANT_CODE or MERCHANT_KEY env" },
         { status: 500 }
       );
     }
 
-    const orderId = 'NIF' + Date.now();
+    // Order ID unik
+    const orderId = "NIF" + Date.now();
 
+    // Signature sesuai docs
     const signature = crypto
-      .createHash('md5')
+      .createHash("md5")
       .update(merchantCode + orderId + amount + merchantKey)
-      .digest('hex');
+      .digest("hex");
 
+    // Payload sesuai API browser docs
     const payload = {
       merchantCode,
-      paymentAmount: amount,
+      paymentAmount: String(amount), // harus string angka
       merchantOrderId: orderId,
       productDetails: productName,
-      email: 'buyer@example.com',
-      phoneNumber: '081234567890',
+      email: "buyer@example.com",
+      phoneNumber: "081234567890",
       callbackUrl,
       returnUrl,
       signature,
+      paymentMethod: "QRIS" // fokus QRIS
     };
 
-    console.log('Payload dikirim ke Duitku:', payload);
+    console.log("Payload dikirim ke Duitku:", payload);
 
     const res = await fetch(
-      'https://sandbox.duitku.com/webapi/api/merchant/v2/invoice',
+      "https://sandbox.duitku.com/webapi/api/merchant/v2/inquiry",
       {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       }
     );
 
     const text = await res.text();
-    console.log('Raw response dari Duitku:', text);
+    console.log("Raw response dari Duitku:", text);
 
     let data;
     try {
       data = JSON.parse(text);
     } catch {
-      data = { error: text }; // kalau bukan JSON
+      data = { error: text };
     }
 
     return NextResponse.json(data);
   } catch (err) {
-    console.error('Error di server:', err);
+    console.error("Error di server:", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
