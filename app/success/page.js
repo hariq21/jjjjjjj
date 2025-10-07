@@ -1,6 +1,8 @@
 "use client";
 import { useSearchParams } from "next/navigation";
 
+export const dynamic = "force-dynamic"; // ⬅️ ini bikin halaman tidak di-prerender
+
 export default function SuccessPage() {
   const sp = useSearchParams();
   const orderId = sp.get("orderId") || "—";
