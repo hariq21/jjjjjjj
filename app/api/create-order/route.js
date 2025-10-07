@@ -37,7 +37,7 @@ export async function POST(req) {
       callbackUrl,
       returnUrl,
       signature,
-      paymentMethod: "QRIS"   // huruf besar semua
+      paymentMethod: "SP"   // huruf besar semua
     };
     
     console.log("Payload dikirim ke Duitku:", payload);
