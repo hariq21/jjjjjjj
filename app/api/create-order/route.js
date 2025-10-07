@@ -17,19 +17,16 @@ export async function POST(req) {
       );
     }
 
-    // Order ID unik
     const orderId = "NIF" + Date.now();
-
-    // Timestamp (milisecond UTC/Jakarta)
     const timestamp = Date.now().toString();
 
-    // Signature SHA256
+    const signatureString = `${merchantCode}-${timestamp}-${merchantKey}`;
     const signature = crypto
       .createHash("sha256")
-      .update(merchantCode + "-" + timestamp + "-" + merchantKey)
+      .update(signatureString)
       .digest("hex");
 
-    // Payload sesuai POP API
+    // Tanpa paymentMethod → biar muncul popup semua metode
     const payload = {
       merchantOrderId: orderId,
       paymentAmount: String(amount),
@@ -37,25 +34,30 @@ export async function POST(req) {
       email: "buyer@example.com",
       phoneNumber: "081234567890",
       callbackUrl,
-      returnUrl,
-      paymentMethod: "QRIS", // bisa QRIS, SP, OVO, dll
+      returnUrl
+      // jangan isi paymentMethod
     };
 
-    console.log("Payload dikirim ke Duitku:", payload);
+    console.log("POP-Popup Payload:", payload);
+    console.log("Signature String:", signatureString);
+    console.log("Signature:", signature);
 
-    const res = await fetch("https://api-sandbox.duitku.com/api/merchant/createInvoice", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-duitku-signature": signature,
-        "x-duitku-timestamp": timestamp,
-        "x-duitku-merchantcode": merchantCode,
-      },
-      body: JSON.stringify(payload),
-    });
+    const res = await fetch(
+      "https://sandbox.duitku.com/api/merchant/createinvoice",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-duitku-signature": signature,
+          "x-duitku-timestamp": timestamp,
+          "x-duitku-merchantcode": merchantCode,
+        },
+        body: JSON.stringify(payload),
+      }
+    );
 
     const text = await res.text();
-    console.log("Raw response dari Duitku:", text);
+    console.log("Raw response dari Duitku Popup:", text);
 
     let data;
     try {
@@ -63,10 +65,9 @@ export async function POST(req) {
     } catch {
       data = { error: text };
     }
-
     return NextResponse.json(data);
   } catch (err) {
-    console.error("Error di server:", err);
+    console.error("POP-Popup API Error:", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
