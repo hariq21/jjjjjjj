@@ -2,7 +2,7 @@
 import { useState } from 'react';
 
 const PRODUCTS = [
-  { id:'ml86',  name:'Mobile Legends 86 Diamonds',  price:25000, desc:'Paket hemat untuk push rank.' },
+  { id:'ml86',  name:'Mobile Legends 86 Diamonds',  price:200, desc:'Paket hemat untuk push rank.' },
   { id:'ml172', name:'Mobile Legends 172 Diamonds', price:48000, desc:'Best value, cocok untuk weekly pack.' },
   { id:'ml257', name:'Mobile Legends 257 Diamonds', price:72000, desc:'Lebih banyak untuk skin epic.' },
   { id:'ml514', name:'Mobile Legends 514 Diamonds', price:142000, desc:'Pas untuk starlight + top up event.' }

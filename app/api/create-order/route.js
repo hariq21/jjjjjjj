@@ -20,36 +20,39 @@ export async function POST(req) {
     // Order ID unik
     const orderId = "NIF" + Date.now();
 
-    // Signature sesuai docs
+    // Timestamp (milisecond UTC/Jakarta)
+    const timestamp = Date.now().toString();
+
+    // Signature SHA256
     const signature = crypto
-      .createHash("md5")
-      .update(merchantCode + orderId + amount + merchantKey)
+      .createHash("sha256")
+      .update(merchantCode + "-" + timestamp + "-" + merchantKey)
       .digest("hex");
 
-    // Payload sesuai API browser docs
+    // Payload sesuai POP API
     const payload = {
-      merchantCode,
-      paymentAmount: String(amount),   // contoh "25000"
       merchantOrderId: orderId,
+      paymentAmount: String(amount),
       productDetails: productName,
       email: "buyer@example.com",
       phoneNumber: "081234567890",
       callbackUrl,
       returnUrl,
-      signature,
-      paymentMethod: "SP"   // huruf besar semua
+      paymentMethod: "QRIS", // bisa QRIS, SP, OVO, dll
     };
-    
+
     console.log("Payload dikirim ke Duitku:", payload);
 
-    const res = await fetch(
-      "https://sandbox.duitku.com/webapi/api/merchant/v2/inquiry",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
-    );
+    const res = await fetch("https://api-sandbox.duitku.com/api/merchant/createInvoice", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-duitku-signature": signature,
+        "x-duitku-timestamp": timestamp,
+        "x-duitku-merchantcode": merchantCode,
+      },
+      body: JSON.stringify(payload),
+    });
 
     const text = await res.text();
     console.log("Raw response dari Duitku:", text);
