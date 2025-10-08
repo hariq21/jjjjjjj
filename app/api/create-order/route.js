@@ -41,7 +41,7 @@ export async function POST(req) {
       callbackUrl,
       returnUrl,
       signature,
-      paymentMethod: paymentMethod || "SP" // default ShopeePay
+      paymentMethod: paymentMethod || "NQ" // default ShopeePay
     };
 
     console.log("V2 Payload dikirim:", payload);
