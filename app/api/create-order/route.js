@@ -1,13 +1,10 @@
 import crypto from "crypto";
 import { NextResponse } from "next/server";
 
-// Handler POST request
 export async function POST(req) {
   try {
-    // Data dari frontend
     const { productName, amount, paymentMethod } = await req.json();
 
-    // Ambil dari ENV
     const merchantCode = process.env.MERCHANT_CODE;
     const merchantKey = process.env.MERCHANT_KEY;
     const callbackUrl = process.env.CALLBACK_URL;
@@ -20,17 +17,10 @@ export async function POST(req) {
       );
     }
 
-    // Buat unique orderId
     const orderId = "NIF" + Date.now();
-
-    // Signature pakai MD5: merchantCode + orderId + amount + merchantKey
     const signatureString = merchantCode + orderId + amount + merchantKey;
-    const signature = crypto
-      .createHash("md5")
-      .update(signatureString)
-      .digest("hex");
+    const signature = crypto.createHash("md5").update(signatureString).digest("hex");
 
-    // Payload sesuai Duitku V2
     const payload = {
       merchantCode,
       paymentAmount: String(amount),
@@ -41,37 +31,18 @@ export async function POST(req) {
       callbackUrl,
       returnUrl,
       signature,
-      paymentMethod: paymentMethod || "NQ" // default ShopeePay
+      paymentMethod, // langsung dari frontend (NQ)
     };
 
-    console.log("V2 Payload dikirim:", payload);
-    console.log("Signature String:", signatureString);
-    console.log("Signature MD5:", signature);
+    const res = await fetch("https://sandbox.duitku.com/webapi/api/merchant/v2/inquiry", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
 
-    // Request ke Duitku Sandbox
-    const res = await fetch(
-      "https://sandbox.duitku.com/webapi/api/merchant/v2/inquiry",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
-    );
-
-    const text = await res.text();
-    console.log("Raw response dari Duitku V2:", text);
-
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      data = { error: text };
-    }
-
+    const data = await res.json();
     return NextResponse.json(data);
-
   } catch (err) {
-    console.error("V2 API Error:", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
