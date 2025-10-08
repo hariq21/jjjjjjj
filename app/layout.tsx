@@ -18,7 +18,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        {/* 🔹 Navbar */}
+        <nav className="bg-white border-b shadow px-6 py-4 flex gap-6">
+          <a href="/" className="font-bold text-blue-600">Home</a>
+          <a href="/history" className="text-gray-600 hover:text-blue-600">Histori</a>
+        </nav>
+
+        {/* konten halaman */}
+        <main className="p-6">{children}</main>
+      </body>
     </html>
   )
 }
