@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createQrisPayment } from "../../../lib/duitku";
+import { createQrisPayment } from "@/lib/duitku";
 
 const diamonds = [
   { id: 1, name: "86 Diamonds", price: 20000 },
