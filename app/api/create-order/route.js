@@ -1,10 +1,13 @@
 import crypto from "crypto";
 import { NextResponse } from "next/server";
 
+// Handler POST request
 export async function POST(req) {
   try {
-    const { productName, amount } = await req.json();
+    // Data dari frontend
+    const { productName, amount, paymentMethod } = await req.json();
 
+    // Ambil dari ENV
     const merchantCode = process.env.MERCHANT_CODE;
     const merchantKey = process.env.MERCHANT_KEY;
     const callbackUrl = process.env.CALLBACK_URL;
@@ -17,47 +20,46 @@ export async function POST(req) {
       );
     }
 
+    // Buat unique orderId
     const orderId = "NIF" + Date.now();
-    const timestamp = Date.now().toString();
 
-    const signatureString = `${merchantCode}-${timestamp}-${merchantKey}`;
+    // Signature pakai MD5: merchantCode + orderId + amount + merchantKey
+    const signatureString = merchantCode + orderId + amount + merchantKey;
     const signature = crypto
-      .createHash("sha256")
+      .createHash("md5")
       .update(signatureString)
       .digest("hex");
 
-    // Tanpa paymentMethod → biar muncul popup semua metode
+    // Payload sesuai Duitku V2
     const payload = {
-      merchantOrderId: orderId,
+      merchantCode,
       paymentAmount: String(amount),
+      merchantOrderId: orderId,
       productDetails: productName,
       email: "buyer@example.com",
       phoneNumber: "081234567890",
       callbackUrl,
-      returnUrl
-      // jangan isi paymentMethod
+      returnUrl,
+      signature,
+      paymentMethod: paymentMethod || "SP" // default ShopeePay
     };
 
-    console.log("POP-Popup Payload:", payload);
+    console.log("V2 Payload dikirim:", payload);
     console.log("Signature String:", signatureString);
-    console.log("Signature:", signature);
+    console.log("Signature MD5:", signature);
 
+    // Request ke Duitku Sandbox
     const res = await fetch(
-      "https://sandbox.duitku.com/api/merchant/createInvoice",
+      "https://sandbox.duitku.com/webapi/api/merchant/v2/inquiry",
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-duitku-signature": signature,
-          "x-duitku-timestamp": timestamp,
-          "x-duitku-merchantcode": merchantCode,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       }
     );
 
     const text = await res.text();
-    console.log("Raw response dari Duitku Popup:", text);
+    console.log("Raw response dari Duitku V2:", text);
 
     let data;
     try {
@@ -65,9 +67,11 @@ export async function POST(req) {
     } catch {
       data = { error: text };
     }
+
     return NextResponse.json(data);
+
   } catch (err) {
-    console.error("POP-Popup API Error:", err);
+    console.error("V2 API Error:", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
